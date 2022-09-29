@@ -2,7 +2,7 @@
   "name": "tracker",
   "displayName": "tracker",
   "description": "tracker for file changes etc",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.71.0"
   },
@@ -10,14 +10,18 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:tracker.helloWorld"
+    "*"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "tracker.helloWorld",
-        "title": "Hello World"
+        "command": "tracker.increaseCount",
+        "title": "Incrase count"
+      },
+      {
+        "command": "tracker.showCount",
+        "title": "Show count"
       }
     ]
   },
