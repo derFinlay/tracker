@@ -42,15 +42,20 @@ export function activate(context: vscode.ExtensionContext) {
 	let showStatsQuickCommandhandler = vscode.commands.registerCommand(
 		'tracker.showQuick',
 		() => {
-			const showQuick = vscode.window.createQuickPick();
-			showQuick.items = Object.keys(counters).map((k: string) => {
+			let items = Object.keys(counters).map((k: string) => {
 				let item: vscode.QuickPickItem = {
 					label: k + ': ' + counters[k],
 				};
 				return item;
 			});
+			items.push({ label: 'Reset all stats' });
+			const showQuick = vscode.window.createQuickPick();
+			showQuick.items = items;
 			showQuick.onDidHide(() => showQuick.dispose());
 			showQuick.onDidAccept(() => {
+				if (showQuick.selectedItems[0].label === 'Reset all stats') {
+					resetStats(context.globalState);
+				}
 				showQuick.dispose();
 			});
 			showQuick.show();
@@ -124,6 +129,13 @@ export function activate(context: vscode.ExtensionContext) {
 		saveCounter(context.globalState);
 	}, 5000);
 }
+
+const resetStats = (state: vscode.Memento) => {
+	Object.keys(counters).forEach((k: string) => {
+		state.update(k, 0);
+		counters[k] = 0;
+	});
+};
 
 const saveCounter = (state: vscode.Memento) => {
 	Object.keys(counters).forEach((k: string) => {
