@@ -120,6 +120,9 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		counters.changes += e.contentChanges[0].text.length;
 	});
+	setInterval(() => {
+		saveCounter(context.globalState);
+	}, 5000);
 }
 
 const saveCounter = (state: vscode.Memento) => {
