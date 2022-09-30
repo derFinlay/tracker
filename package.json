@@ -2,7 +2,7 @@
   "name": "tracker",
   "displayName": "tracker",
   "description": "tracker for file changes etc",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "engines": {
     "vscode": "^1.71.0"
   },
@@ -13,6 +13,7 @@
     "onWebviewPanel:codingActivity",
     "onCommand:tracker.showActivity",
     "onCommand:tracker.showQuick",
+    "onCommand:tracker.saveStats",
     "*"
   ],
   "main": "./out/extension.js",
@@ -25,6 +26,10 @@
       {
         "command": "tracker.showQuick",
         "title": "Show stats quickly"
+      },
+      {
+        "command": "tracker.saveStats",
+        "title": "Save coding stats"
       }
     ]
   },

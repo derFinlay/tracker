@@ -57,6 +57,13 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 
+	let saveStatsCommandhandler = vscode.commands.registerCommand(
+		'tracker.saveStats',
+		(e) => {
+			saveCounter(context.globalState);
+		}
+	);
+
 	let showStatsWebviewCommandhandler = vscode.commands.registerCommand(
 		'tracker.showActivity',
 		() => {
@@ -88,6 +95,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 
+	context.subscriptions.push(saveStatsCommandhandler);
 	context.subscriptions.push(showStatsQuickCommandhandler);
 	context.subscriptions.push(showStatsWebviewCommandhandler);
 
