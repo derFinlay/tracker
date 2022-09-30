@@ -1,44 +1,75 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+
+let counters = {
+	created: 0,
+	changes: 0,
+	terminals: 0,
+	editorsOpend: 0,
+	deleted: 0,
+};
 
 export function activate(context: vscode.ExtensionContext) {
-	let count = 0;
+	function getHtmlForPanel(webview: vscode.Webview): string {
+		const htmlDoc = fs.readFileSync(
+			context.extensionPath + '/media/activityView.html',
+			'utf8'
+		);
 
-	let counters = {
-		created: 0,
-		changes: 0,
-		terminals: 0,
-		editorsOpend: 0,
-		deleted: 0,
-	};
+		return htmlDoc
+			.replace('$(deleted)', counters.deleted.toString())
+			.replace('$(changed)', counters.changes.toString())
+			.replace('$(created)', counters.created.toString())
+			.replace('$(terminals)', counters.terminals.toString());
+	}
 
-	console.log('Congratulations, your extension "tracker" is now active!');
+	let showStatsWebviewCommandhandler = vscode.commands.registerCommand(
+		'tracker.showActivity',
+		() => {
+			const panel = vscode.window.createWebviewPanel(
+				'codingActivity',
+				'Coding Activity',
+				vscode.ViewColumn.One,
+				{
+					localResourceRoots: [
+						vscode.Uri.file(
+							path.join(context.extensionPath, 'media')
+						),
+					],
+				}
+			);
+			panel.webview.html = getHtmlForPanel(panel.webview);
 
-	
+			const updateInterval = setInterval(() => {
+				panel.webview.html = getHtmlForPanel(panel.webview);
+			}, 5000);
+
+			panel.onDidDispose(
+				() => {
+					clearInterval(updateInterval);
+				},
+				null,
+				context.subscriptions
+			);
+		}
+	);
+
+	context.subscriptions.push(showStatsWebviewCommandhandler);
+
 	vscode.window.onDidOpenTerminal((e) => {
 		counters.terminals++;
-		vscode.window.showInformationMessage(
-			'Terminals opend: ' + counters.terminals
-		);
 	});
 	vscode.window.onDidChangeActiveTextEditor((e) => {
 		counters.editorsOpend++;
-		vscode.window.showInformationMessage(
-			'Editors opend: ' + counters.editorsOpend
-		);
 	});
 
 	vscode.workspace.onDidDeleteFiles((e) => {
 		counters.deleted += e.files.length;
-		vscode.window.showInformationMessage(
-			'Files deleted: ' + counters.deleted
-		);
 	});
 
 	vscode.workspace.onDidCreateFiles((e) => {
 		counters.created += e.files.length;
-		vscode.window.showInformationMessage(
-			'Files created: ' + counters.created
-		);
 	});
 
 	vscode.workspace.onDidChangeTextDocument((e) => {
@@ -46,8 +77,13 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 		counters.changes += e.contentChanges[0].text.length;
-		vscode.window.showInformationMessage('Changes: ' + counters.changes);
 	});
 }
 
-export function deactivate() {}
+const saveCounter = async (counter: string, value: Number): Promise<void> => {
+	//TODO: save counter to database
+};
+
+export function deactivate() {
+	//TODO: save counters
+}
