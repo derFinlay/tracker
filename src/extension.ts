@@ -2,7 +2,11 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 
-let counters = {
+interface Counter {
+	[key: string]: number;
+}
+
+let counters: Counter = {
 	created: 0,
 	changes: 0,
 	terminals: 0,
@@ -11,18 +15,47 @@ let counters = {
 };
 
 export function activate(context: vscode.ExtensionContext) {
-	function getHtmlForPanel(webview: vscode.Webview): string {
+	counters.created = context.globalState.get('created') || 0;
+	counters.changes = context.globalState.get('changes') || 0;
+	counters.deleted = context.globalState.get('deleted') || 0;
+	counters.terminals = context.globalState.get('terminals') || 0;
+	counters.editorsOpend = context.globalState.get('editorsOpend') || 0;
+
+	function getHtmlForPanel(): string {
 		const htmlDoc = fs.readFileSync(
 			context.extensionPath + '/media/activityView.html',
 			'utf8'
 		);
 
 		return htmlDoc
+			.replace('$(title)', 'Coding activity')
+			.replace(
+				'$(css)',
+				context.extensionPath + '/media/activityView.css'
+			)
 			.replace('$(deleted)', counters.deleted.toString())
 			.replace('$(changed)', counters.changes.toString())
 			.replace('$(created)', counters.created.toString())
 			.replace('$(terminals)', counters.terminals.toString());
 	}
+
+	let showStatsQuickCommandhandler = vscode.commands.registerCommand(
+		'tracker.showQuick',
+		() => {
+			const showQuick = vscode.window.createQuickPick();
+			showQuick.items = Object.keys(counters).map((k: string) => {
+				let item: vscode.QuickPickItem = {
+					label: k + ': ' + counters[k],
+				};
+				return item;
+			});
+			showQuick.onDidHide(() => showQuick.dispose());
+			showQuick.onDidAccept(() => {
+				showQuick.dispose();
+			});
+			showQuick.show();
+		}
+	);
 
 	let showStatsWebviewCommandhandler = vscode.commands.registerCommand(
 		'tracker.showActivity',
@@ -39,10 +72,10 @@ export function activate(context: vscode.ExtensionContext) {
 					],
 				}
 			);
-			panel.webview.html = getHtmlForPanel(panel.webview);
+			panel.webview.html = getHtmlForPanel();
 
 			const updateInterval = setInterval(() => {
-				panel.webview.html = getHtmlForPanel(panel.webview);
+				panel.webview.html = getHtmlForPanel();
 			}, 5000);
 
 			panel.onDidDispose(
@@ -55,6 +88,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	);
 
+	context.subscriptions.push(showStatsQuickCommandhandler);
 	context.subscriptions.push(showStatsWebviewCommandhandler);
 
 	vscode.window.onDidOpenTerminal((e) => {
@@ -80,10 +114,12 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 }
 
-const saveCounter = async (counter: string, value: Number): Promise<void> => {
-	//TODO: save counter to database
+const saveCounter = (state: vscode.Memento) => {
+	Object.keys(counters).forEach((k: string) => {
+		state.update(k, counters[k]);
+	});
 };
 
-export function deactivate() {
-	//TODO: save counters
+export function deactivate(context: vscode.ExtensionContext) {
+	saveCounter(context.globalState);
 }

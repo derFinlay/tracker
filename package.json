@@ -12,6 +12,7 @@
   "activationEvents": [
     "onWebviewPanel:codingActivity",
     "onCommand:tracker.showActivity",
+    "onCommand:tracker.showQuick",
     "*"
   ],
   "main": "./out/extension.js",
@@ -20,6 +21,10 @@
       {
         "command": "tracker.showActivity",
         "title": "Show stats for coding activity"
+      },
+      {
+        "command": "tracker.showQuick",
+        "title": "Show stats quickly"
       }
     ]
   },
